@@ -1,53 +1,47 @@
-
-
 name: Java File Report
 
 on:
-	push:
-		paths:
-			- 'BankApplication/**'
-	pull_request:
-		paths:
-			- 'BankApplication/**'
-
+  push:
+    branches: [main]
 jobs:
-	java-file-report:
-		runs-on: ubuntu-latest
-		defaults:
-			run:
-				working-directory: ..
-		steps:
-			- name: Checkout code
-				uses: actions/checkout@v4
-			- name: Find .java files and count lines
-				id: count_java
-				run: |
-					JAVA_FILES=$(find BankApplication -type f -name '*.java')
-					if [ -z "$JAVA_FILES" ]; then
-						echo "No .java files found!" >&2
-						exit 1
-					fi
-					TOTAL=0
-                echo "Java File Report" > java-file-report.txt
-                echo "================" >> java-file-report.txt
-                COUNT=$(echo "$JAVA_FILES" | wc -l)
-                echo "Number of .java files: $COUNT" >> java-file-report.txt
-                for f in $JAVA_FILES; do
-                    LINES=$(wc -l < "$f")
-                    echo "$f – $LINES" >> java-file-report.txt
-                    TOTAL=$((TOTAL + LINES))
-                done
-                echo "Total lines of code: $TOTAL" >> java-file-report.txt
-			- name: Fail if any .class files are committed
-				run: |
-					CLASS_FILES=$(git ls-files 'BankApplication/**/*.class')
-					if [ -n "$CLASS_FILES" ]; then
-						echo "Error: .class files are committed!" >&2
-						echo "$CLASS_FILES" >&2
-						exit 1
-					fi
-			- name: Upload java-file-report.txt
-				uses: actions/upload-artifact@v4
-				with:
-					name: java-file-report
-					path: java-file-report.txt
+  java-file-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Find all .java files and count lines
+        run: |
+          set -e
+          JAVA_FILES=$(find . -type f -name "*.java")
+          JAVA_COUNT=$(echo "$JAVA_FILES" | grep -c . || echo 0)
+          if [ "$JAVA_COUNT" -eq 0 ]; then
+            echo "No .java files found!"
+            exit 1
+          fi
+          echo "Number of .java files: $JAVA_COUNT" > java-file-report.txt
+          TOTAL_LINES=0
+          echo "" >> java-file-report.txt
+          echo "Per-file breakdown:" >> java-file-report.txt
+          for f in $JAVA_FILES; do
+            LINES=$(wc -l < "$f")
+            TOTAL_LINES=$((TOTAL_LINES + LINES))
+            echo "$f – $LINES" >> java-file-report.txt
+          done
+          echo "" >> java-file-report.txt
+          echo "Total lines of code: $TOTAL_LINES" >> java-file-report.txt
+
+      - name: Fail if any .class files are committed
+        run: |
+          CLASS_FILES=$(git ls-files '*.class')
+          if [ -n "$CLASS_FILES" ]; then
+            echo "Compiled .class files are committed! This is bad practice."
+            echo "$CLASS_FILES"
+            exit 1
+          fi
+
+      - name: Upload java-file-report.txt as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-file-report
+          path: java-file-report.txt
