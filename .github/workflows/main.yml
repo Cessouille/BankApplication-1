@@ -28,16 +28,16 @@ jobs:
 						exit 1
 					fi
 					TOTAL=0
-					echo "Java File Report" > VALIDATION-LOGICIELLE/java-file-report.txt
-					echo "================" >> VALIDATION-LOGICIELLE/java-file-report.txt
-					COUNT=$(echo "$JAVA_FILES" | wc -l)
-					echo "Number of .java files: $COUNT" >> VALIDATION-LOGICIELLE/java-file-report.txt
-					for f in $JAVA_FILES; do
-						LINES=$(wc -l < "$f")
-						echo "$f – $LINES" >> VALIDATION-LOGICIELLE/java-file-report.txt
-						TOTAL=$((TOTAL + LINES))
-					done
-					echo "Total lines of code: $TOTAL" >> VALIDATION-LOGICIELLE/java-file-report.txt
+                echo "Java File Report" > java-file-report.txt
+                echo "================" >> java-file-report.txt
+                COUNT=$(echo "$JAVA_FILES" | wc -l)
+                echo "Number of .java files: $COUNT" >> java-file-report.txt
+                for f in $JAVA_FILES; do
+                    LINES=$(wc -l < "$f")
+                    echo "$f – $LINES" >> java-file-report.txt
+                    TOTAL=$((TOTAL + LINES))
+                done
+                echo "Total lines of code: $TOTAL" >> java-file-report.txt
 			- name: Fail if any .class files are committed
 				run: |
 					CLASS_FILES=$(git ls-files 'BankApplication/**/*.class')
@@ -50,4 +50,4 @@ jobs:
 				uses: actions/upload-artifact@v4
 				with:
 					name: java-file-report
-					path: VALIDATION-LOGICIELLE/java-file-report.txt
+					path: java-file-report.txt
